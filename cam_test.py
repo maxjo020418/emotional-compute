@@ -17,13 +17,13 @@ from PyQt5.QtWidgets import (
 )
 
 class VideoThread(QThread):
-    change_pixmap: pyqtBoundSignal = pyqtSignal(np.ndarray, dict)
+    change_pixmap: pyqtSignal = pyqtSignal(np.ndarray, dict)
 
     face_cascade = cv2.CascadeClassifier('./db/xml/haarcascade_frontalface_alt2.xml')
     eyes_cascade = cv2.CascadeClassifier('./db/xml/haarcascade_eye_tree_eyeglasses.xml')
 
     MODE = 1
-    frame_check = 0  # 중간에 frmae skipping 룔으로
+    frame_check = 0  # 중간에 frame skipping 룔으로
 
     def run(self):
         cap = cv2.VideoCapture(0)
@@ -39,6 +39,7 @@ class VideoThread(QThread):
                     self.detect_face_deepface,
                 ]
                 self.change_pixmap.emit(*detection_funcs[self.MODE](frame))
+            
             elif ret:
                 self.change_pixmap.emit(frame, {})
             
