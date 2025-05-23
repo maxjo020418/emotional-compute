@@ -7,7 +7,7 @@
 3. 인터페이스 (infotainment sys.)
 4. 대리추천 시스템 (스크레이핑)
 
-### What to use
+### What to use/do
 - [x] 카메라 & 얼굴인식 - openCV & deepface
 - [x] UI - PyQT5
 - [ ] quiz
