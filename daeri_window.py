@@ -1,10 +1,10 @@
 from typing import Dict
 
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtBoundSignal
 from PyQt5.QtWidgets import QWidget
 
 class DaeriWindow(QWidget):
-    def __init__(self, signals: Dict[str, pyqtSignal]) -> None:
+    def __init__(self, signals: Dict[str, pyqtBoundSignal]) -> None:
         super().__init__()
         self.setWindowTitle("대리운전화면")
         self.signals = signals

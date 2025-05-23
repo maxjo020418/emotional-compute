@@ -1,10 +1,10 @@
 from typing import Dict
 
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtBoundSignal
 from PyQt5.QtWidgets import QWidget
 
 class QuizWindow(QWidget):
-    def __init__(self, signals: Dict[str, pyqtSignal]) -> None:
+    def __init__(self, signals: Dict[str, pyqtBoundSignal]) -> None:
         super().__init__()
         self.setWindowTitle("퀴즈화면")
         self.signals = signals

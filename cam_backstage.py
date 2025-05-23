@@ -10,7 +10,7 @@ from pathlib import Path
 
 from deepface import DeepFace
 
-from PyQt5.QtCore import QThread, pyqtSignal
+from PyQt5.QtCore import QThread, pyqtSignal, pyqtBoundSignal
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QLabel, QPushButton,
@@ -175,7 +175,7 @@ class BackstageWin(QWidget):
 
         print('\nBackstage Thread READY\n' + '='*25)
 
-    def get_signals(self) -> Dict[str, pyqtSignal]:
+    def get_signals(self) -> Dict[str, pyqtBoundSignal]:
         return \
             {
                 'video_stream': self.video_thread.change_pixmap,
