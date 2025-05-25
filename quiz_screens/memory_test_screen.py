@@ -1,4 +1,4 @@
-# screens/memory_test_screen.py
+# quiz_screens/memory_test_screen.py
 
 from typing import Callable
 from PyQt5.QtWidgets import (

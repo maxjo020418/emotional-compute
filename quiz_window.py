@@ -6,9 +6,9 @@ from PyQt5.QtWidgets import QWidget, QStackedLayout, QVBoxLayout, QLabel, QPushB
 from PyQt5.QtCore import pyqtBoundSignal
 
 # 각 퀴즈별 화면 클래스 임포트
-from screens.reaction_test_screen import ReactionTestScreen
-from screens.problem_solving_screen import ProblemSolvingScreen
-from screens.memory_test_screen import MemoryTestScreen
+from quiz_screens.reaction_test_screen import ReactionTestScreen
+from quiz_screens.problem_solving_screen import ProblemSolvingScreen
+from quiz_screens.memory_test_screen import MemoryTestScreen
 
 class QuizWindow(QWidget):
     def __init__(self, signals: Dict[str, pyqtBoundSignal]) -> None:
@@ -41,6 +41,9 @@ class QuizWindow(QWidget):
 
         self.setLayout(self.stack)
         self.stack.setCurrentWidget(self.main_page)
+
+        # 알림용 __init__ 마지막에 두기
+        print('\nQuizWindow Thread READY\n' + '=' * 25)
 
     def start_random_quiz(self):
         # 구현된 퀴즈 중 랜덤 선택하여 화면 전환

@@ -1,4 +1,4 @@
-# screens/problem_solving_screen.py
+# quiz_screens/problem_solving_screen.py
 
 from typing import Callable
 from PyQt5.QtWidgets import (
