@@ -1,11 +1,56 @@
 from typing import Dict
 from daeri_window import DaeriWindow
 from quiz_window import QuizWindow
+
 from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QMainWindow, QStackedWidget, QDialog, QLabel, QHBoxLayout, QVBoxLayout, QMessageBox
 from PyQt5.QtGui import QPainter, QPolygon, QPen, QFont
-from PyQt5.QtCore import QPoint, Qt, QTimer
+from PyQt5.QtCore import QPoint, Qt, QTimer, pyqtBoundSignal
+
 import sys
 import math
+from collections.abc import Callable
+
+
+class DashWindow(QMainWindow):
+    def __init__(self, signals: Dict[str, pyqtBoundSignal]) -> None:
+        super().__init__()
+        self.signals = signals
+        self.setWindowTitle("계기판")
+        self.setGeometry(100, 100, 600, 400)
+
+        self.stack = QStackedWidget()
+        self.setCentralWidget(self.stack)
+
+        # 초기 위젯: 측정 중 (MeasSig)
+        self.measuring_ui = MeasSig(self.handle_signal_input)
+        self.stack.addWidget(self.measuring_ui)
+    
+
+    def handle_signal_input(self, signal):
+        if signal == "test_confirm":
+            self.test_confirm_ui = TestConfirmDialog(self.handle_signal_input)
+            self.stack.addWidget(self.test_confirm_ui)
+            self.stack.setCurrentWidget(self.test_confirm_ui)
+        elif signal == "MeasSig":
+            self.measuring_ui = MeasSig(self.handle_signal_input)
+            self.stack.addWidget(self.measuring_ui)
+            self.stack.setCurrentWidget(self.measuring_ui)
+        elif signal == "shutdown":
+            self.shutdown_ui = ShutdownUI()
+            self.stack.addWidget(self.shutdown_ui)
+            self.stack.setCurrentWidget(self.shutdown_ui)
+        # elif signal == "daeri_app":
+        #     self.daeri_ui = DaeriWindow()
+        #     self.stack.addWidget(self.daeri_ui)
+        #     self.stack.setCurrentWidget(self.daeri_ui)
+        # elif signal == "quiz":
+        #     self.quiz_ui = QuizWindow()
+        #     self.stack.addWidget(self.quiz_ui)
+        #     self.stack.setCurrentWidget(self.quiz_ui)
+        else:
+            self.status_ui = StatusUI(signal, self.handle_signal_input)
+            self.stack.addWidget(self.status_ui)
+            self.stack.setCurrentWidget(self.status_ui)
 
 
 class MeasSig(QWidget):
@@ -22,18 +67,18 @@ class MeasSig(QWidget):
         self.loading_timer.timeout.connect(self.update_loading_text)
         self.loading_timer.start(500)
 
-    def keyPressEvent(self, event):
+    def keyPressEvent(self, a0):
         # 0 입력 시 운전 가능, 1 입력 시 운전 불가능
-        if event.key() == Qt.Key_0:
+        if a0.key() == Qt.Key_0:
             self.switch_callback(0)
-        elif event.key() == Qt.Key_1:
+        elif a0.key() == Qt.Key_1:
             self.switch_callback(1)
 
     def update_loading_text(self):
         self.dot_count = (self.dot_count + 1) % 4
         self.update()
 
-    def paintEvent(self, event):
+    def paintEvent(self, a0):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setFont(QFont("맑은 고딕", 13))
@@ -94,7 +139,7 @@ class StatusUI(QWidget):
             self.btn_test.clicked.connect(self.go_to_test_confirm)
             self.btn_daeri.clicked.connect(self.go_to_daeri_app)
 
-    def paintEvent(self, event):
+    def paintEvent(self, a0):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setFont(QFont("맑은 고딕", 16))
@@ -147,11 +192,11 @@ class StatusUI(QWidget):
 
 
 class TestConfirmDialog(QDialog):
-    def __init__(self, parent_callback = None):
+    def __init__(self, parent_callback: Callable):
         super().__init__()
         self.setWindowTitle("2차 테스트 확인")
         self.setFixedSize(500,200)
-        self.parent_callback = parent_callback
+        self.parent_callback: Callable = parent_callback
 
         center_x = self.width() // 2
         center_y = self.height() // 2
@@ -204,51 +249,3 @@ class ShutdownUI(QWidget):
         layout.addWidget(self.label)
         layout.addStretch()
         self.setLayout(layout)
-
-
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("UI 상태 전환")
-        self.setGeometry(100, 100, 600, 400)
-
-        self.stack = QStackedWidget()
-        self.setCentralWidget(self.stack)
-
-        # 초기 위젯: 측정 중 (MeasSig)
-        self.measuring_ui = MeasSig(self.handle_signal_input)
-        self.stack.addWidget(self.measuring_ui)
-    
-
-    def handle_signal_input(self, signal):
-        if signal == "test_confirm":
-            self.test_confirm_ui = TestConfirmDialog(self.handle_signal_input)
-            self.stack.addWidget(self.test_confirm_ui)
-            self.stack.setCurrentWidget(self.test_confirm_ui)
-        elif signal == "MeasSig":
-            self.measuring_ui = MeasSig(self.handle_signal_input)
-            self.stack.addWidget(self.measuring_ui)
-            self.stack.setCurrentWidget(self.measuring_ui)
-        elif signal == "shutdown":
-            self.shutdown_ui = ShutdownUI()
-            self.stack.addWidget(self.shutdown_ui)
-            self.stack.setCurrentWidget(self.shutdown_ui)
-        elif signal == "daeri_app":
-            self.daeri_ui = DaeriWindow()
-            self.stack.addWidget(self.daeri_ui)
-            self.stack.setCurrentWidget(self.daeri_ui)
-        elif signal == "quiz":
-            self.quiz_ui = QuizWindow()
-            self.stack.addWidget(self.quiz_ui)
-            self.stack.setCurrentWidget(self.quiz_ui)
-        else:
-            self.status_ui = StatusUI(signal, self.handle_signal_input)
-            self.stack.addWidget(self.status_ui)
-            self.stack.setCurrentWidget(self.status_ui)
-
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    win = MainWindow()
-    win.show()
-    sys.exit(app.exec_())
