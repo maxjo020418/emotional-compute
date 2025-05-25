@@ -24,6 +24,9 @@ class DashWindow(QMainWindow):
         # 초기 위젯: 측정 중 (MeasSig)
         self.measuring_ui = MeasSig(self.handle_signal_input)
         self.stack.addWidget(self.measuring_ui)
+
+        # 알림용 __init__ 마지막에 두기
+        print('\nDashWindow Thread READY\n' + '=' * 25)
     
 
     def handle_signal_input(self, signal):
