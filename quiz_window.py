@@ -10,6 +10,8 @@ from quiz_screens.reaction_test_screen import ReactionTestScreen
 from quiz_screens.problem_solving_screen import ProblemSolvingScreen
 from quiz_screens.memory_test_screen import MemoryTestScreen
 
+from daeri_window import DaeriWindow
+
 class QuizWindow(QWidget):
     def __init__(self, signals: Dict[str, pyqtBoundSignal]) -> None:
         super().__init__()
@@ -32,6 +34,7 @@ class QuizWindow(QWidget):
 
         # 구현된 퀴즈만 리스트에 추가
         self.screens = [
+
             ReactionTestScreen(self.stack, on_finish=self._handle_reaction),
             ProblemSolvingScreen(self.stack, on_finish=self._handle_problem),
             MemoryTestScreen(self.stack, on_finish=self._handle_memory)
@@ -60,10 +63,16 @@ class QuizWindow(QWidget):
     def _handle_reaction(self, average_reaction_ms: float):
         # 평균 반응시간을 받아 처리
         print(f"[결과] 평균 반응 속도: {average_reaction_ms:.1f}ms")
-        # 판단 기준: 400ms 초과면 프로세스 종료
+        # 판단 기준: 400ms 초과면 종료
         if average_reaction_ms > 400:
-            QMessageBox.warning(self, "결과", "반응 속도가 너무 느립니다. 차량 운전이 거부됩니다.") #ign_btn
-            sys.exit(0)
+            QMessageBox.warning(self, "결과", "반응 속도가 너무 느립니다. 차량 운전이 거부됩니다.\n"
+                                            "대리 App으로 이동합니다.") #ign_btn
+            # 1) DaeriWindow 인스턴스 생성 (signals 딕셔너리 그대로 전달)
+            self.daeri_win = DaeriWindow(self.signals)
+            # 2) DaeriWindow 띄우기
+            self.daeri_win.show()
+            # 3) 퀴즈 창 닫기
+            self.close()
         else:
             QMessageBox.information(self, "결과", "운전이 가능합니다.") #acc_btn
             self.close()
@@ -72,8 +81,14 @@ class QuizWindow(QWidget):
         # 인지 능력 테스트 결과 처리 (10점 만점)
         print(f"[결과] 인지 능력 점수: {score}점")
         if score < 8:
-            QMessageBox.warning(self, "결과", "점수가 부적합합니다. 차량 운전이 거부됩니다.") #ign_btn
-            sys.exit(0)
+            QMessageBox.warning(self, "결과", "점수가 부적합합니다. 차량 운전이 거부됩니다.\n"
+                                            "대리 App으로 이동합니다.") #ign_btn
+            # 1) DaeriWindow 인스턴스 생성 (signals 딕셔너리 그대로 전달)
+            self.daeri_win = DaeriWindow(self.signals)
+            # 2) DaeriWindow 띄우기
+            self.daeri_win.show()
+            # 3) 퀴즈 창 닫기
+            self.close()
         else:
             QMessageBox.information(self, "결과", "운전이 가능합니다.") #acc_btn
             self.close()
@@ -86,8 +101,14 @@ class QuizWindow(QWidget):
             QMessageBox.information(self, "결과", "기억력 테스트 통과! 운전이 가능합니다.") #acc_btn
             self.close()
         else:
-            QMessageBox.warning(self, "결과", "기억력 테스트 불합격. 차량 운전이 거부됩니다.") #ign_btn
-            sys.exit(0)
+            QMessageBox.warning(self, "결과", "기억력 테스트 불합격. 차량 운전이 거부됩니다.\n"
+                                            "대리 App으로 이동합니다.") #ign_btn
+            # 1) DaeriWindow 인스턴스 생성 (signals 딕셔너리 그대로 전달)
+            self.daeri_win = DaeriWindow(self.signals)
+            # 2) DaeriWindow 띄우기
+            self.daeri_win.show()
+            # 3) 퀴즈 창 닫기
+            self.close()
 
     def _finish_quiz(self):
         # 퀴즈 종료 후 처리
