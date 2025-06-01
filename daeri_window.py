@@ -1,4 +1,5 @@
 from typing import Dict
+import webbrowser
 
 from PyQt5.QtCore import pyqtBoundSignal, Qt
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QMessageBox, QHBoxLayout
@@ -6,6 +7,7 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QMessageB
 
 class DaeriWindow(QWidget):
     def __init__(self, signals: Dict[str, pyqtBoundSignal]) -> None:
+
         super().__init__()
         self.setWindowTitle("대리운전화면")
         self.signals = signals
@@ -14,12 +16,12 @@ class DaeriWindow(QWidget):
         print('\nDaeriWindow Thread READY\n' + '=' * 25)
 
     def _setup_ui(self):
-        #ui설정 위젯 생성
+
         main_layout = QVBoxLayout()
         main_layout.setAlignment(Qt.AlignCenter)
 
         self._create_question_screen(main_layout)
-        self._create_connecting_screen(main_layout)
+        # _create_connecting_screen은 이제 _open_daeri_website에서 직접 처리하므로 필요 없음
         self._create_warning_screen(main_layout)
         self._create_shutdown_screen(main_layout)
 
@@ -27,7 +29,7 @@ class DaeriWindow(QWidget):
         self.show_question_screen()
 
     def _create_question_screen(self, parent_layout):
-        #질문 화면 생성
+
         self.question_widget = QWidget()
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignCenter)
@@ -42,7 +44,7 @@ class DaeriWindow(QWidget):
         self.yes_button.setFixedSize(120, 50)
         self.yes_button.setStyleSheet(
             "font-size: 20px; padding: 10px; background-color: #4CAF50; color: white; border-radius: 10px;")
-        self.yes_button.clicked.connect(self.show_connecting_screen)
+        self.yes_button.clicked.connect(self._open_daeri_website)
 
         self.no_button = QPushButton("아니오")
         self.no_button.setFixedSize(120, 50)
@@ -60,23 +62,10 @@ class DaeriWindow(QWidget):
         self.question_widget.setLayout(layout)
         parent_layout.addWidget(self.question_widget)
 
-    def _create_connecting_screen(self, parent_layout):
-        #대리 연결중 화면
-        self.connecting_widget = QWidget()
-        layout = QVBoxLayout()
-        layout.setAlignment(Qt.AlignCenter)
-
-        self.connecting_label = QLabel("대리 어플 접속 중...")
-        self.connecting_label.setAlignment(Qt.AlignCenter)
-        self.connecting_label.setStyleSheet("font-size: 24px; font-weight: bold;")
-        layout.addWidget(self.connecting_label)
-
-        self.connecting_widget.setLayout(layout)
-        parent_layout.addWidget(self.connecting_widget)
-        self.connecting_widget.hide()
+    # _create_connecting_screen 메서드 삭제
 
     def _create_warning_screen(self, parent_layout):
-        #경고문 화면
+
         self.warning_widget = QWidget()
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignCenter)
@@ -115,7 +104,7 @@ class DaeriWindow(QWidget):
         self.warning_widget.hide()
 
     def _create_shutdown_screen(self, parent_layout):
-        #시동차단 화면
+
         self.shutdown_widget = QWidget()
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignCenter)
@@ -130,9 +119,8 @@ class DaeriWindow(QWidget):
         self.shutdown_widget.hide()
 
     def _hide_all_screens(self):
-        #화면숨기기
         self.question_widget.hide()
-        self.connecting_widget.hide()
+
         self.warning_widget.hide()
         self.shutdown_widget.hide()
 
@@ -140,25 +128,29 @@ class DaeriWindow(QWidget):
         self._hide_all_screens()
         self.question_widget.show()
 
-    def show_connecting_screen(self):
-        #질문 화면연결
-        self._hide_all_screens()
-        self.connecting_widget.show()
-        QMessageBox.information(self, "대리 호출", "대리운전 어플로 이동합니다.")
-        self.close()
+    def _open_daeri_website(self):
+        daeri_url = "https://www.google.com/maps/search/%EB%8C%80%EB%A6%AC%EC%9A%B4%EC%A0%84?entry=ttu&g_ep=EgoyMDI1MDUyOC4wIKXMDSoASAFQAw%3D%3D"
+        try:
+            webbrowser.open(daeri_url)
+            QMessageBox.information(self, "대리운전 시연", f"대리운전 서비스를 시연하기 위해 웹 브라우저를 엽니다:\n{daeri_url}")
+        except Exception as e:
+            QMessageBox.critical(self, "오류", f"웹 브라우저를 여는 데 실패했습니다: {e}")
+        finally:
+            self.close()
+
 
     def show_warning_screen(self):
-        #경고화면연결
+
         self._hide_all_screens()
         self.warning_widget.show()
 
-    def _handle_ignition_after_warning(self):\
-        #차단화면연결
+    def _handle_ignition_after_warning(self):
+
         QMessageBox.warning(self, "시동 차단", "음주 상태이므로 시동이 차단됩니다.")
         self.close()
 
     def show_shutdown_message(self):
-        #끄기화면연결
+
         self._hide_all_screens()
         self.shutdown_widget.show()
         QMessageBox.information(self, "시동 끄기", "차량 시동이 꺼집니다.")
