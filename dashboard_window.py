@@ -42,14 +42,14 @@ class DashWindow(QMainWindow):
             self.shutdown_ui = ShutdownUI()
             self.stack.addWidget(self.shutdown_ui)
             self.stack.setCurrentWidget(self.shutdown_ui)
-        # elif signal == "daeri_app":
-        #     self.daeri_ui = DaeriWindow()
-        #     self.stack.addWidget(self.daeri_ui)
-        #     self.stack.setCurrentWidget(self.daeri_ui)
-        # elif signal == "quiz":
-        #     self.quiz_ui = QuizWindow()
-        #     self.stack.addWidget(self.quiz_ui)
-        #     self.stack.setCurrentWidget(self.quiz_ui)
+        elif signal == "daeri_app":
+            self.daeri_ui = DaeriWindow(self.signals)
+            self.stack.addWidget(self.daeri_ui)
+            self.stack.setCurrentWidget(self.daeri_ui)
+        elif signal == "quiz":
+            self.quiz_ui = QuizWindow(self.signals)
+            self.stack.addWidget(self.quiz_ui)
+            self.stack.setCurrentWidget(self.quiz_ui)
         else:
             self.status_ui = StatusUI(signal, self.handle_signal_input)
             self.stack.addWidget(self.status_ui)
@@ -194,7 +194,7 @@ class StatusUI(QWidget):
             self.switch_callback("daeri_app")
 
 
-class TestConfirmDialog(QDialog):
+class TestConfirmDialog(QWidget):
     def __init__(self, parent_callback: Callable):
         super().__init__()
         self.setWindowTitle("2차 테스트 확인")
@@ -230,11 +230,9 @@ class TestConfirmDialog(QDialog):
         self.btn_no.clicked.connect(self.reject_and_notify)
 
     def accept(self):
-        self.accept()
         self.parent_callback("quiz")
 
     def reject_and_notify(self):
-        self.reject()
         self.parent_callback("shutdown")  # MainWindow에 'shutdown' 신호 전달
 
 class ShutdownUI(QWidget):
@@ -252,3 +250,4 @@ class ShutdownUI(QWidget):
         layout.addWidget(self.label)
         layout.addStretch()
         self.setLayout(layout)
+ 
