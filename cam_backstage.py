@@ -21,6 +21,8 @@ from dashboard_window import DashWindow
 from quiz_window import QuizWindow
 from daeri_window import DaeriWindow
 
+video_debug = False
+
 here = Path(__file__).resolve().parent
 frontal = here / 'db' / 'xml' / 'haarcascade_frontalface_alt2.xml'
 eye = here / 'db' / 'xml' / 'haarcascade_eye_tree_eyeglasses.xml'
@@ -31,28 +33,23 @@ class VideoThread(QThread):
     face_cascade = cv2.CascadeClassifier(str(frontal))
     eyes_cascade = cv2.CascadeClassifier(str(eye))
 
-    MODE = 1
-    frame_check = 0  # 중간에 frame skipping 룔으로
-
     def run(self):
         cap = cv2.VideoCapture(0)
-        print(type(self.change_pixmap))
         print(cap)
+
+        MODE = 0 if video_debug else 2
+        print('='*10 + f'\nvideo_debug: {video_debug}\n'+ '='*10)
 
         while True:
             ret, frame = cap.read()  # bool, ndarray
 
-            if ret and self.frame_check >= 60:
+            if ret:
                 detection_funcs = [
+                    lambda frame: (frame, {}),  # debug, no processing
                     self.detect_face_cv,
                     self.detect_face_deepface,
                 ]
-                self.change_pixmap.emit(*detection_funcs[self.MODE](frame))
-            
-            elif ret:
-                self.change_pixmap.emit(frame, {})
-            
-            self.frame_check += 1
+                self.change_pixmap.emit(*detection_funcs[MODE](frame))
 
     def detect_face_cv(self, frame: np.ndarray) -> Tuple[np.ndarray, dict]:
         frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -82,9 +79,13 @@ class VideoThread(QThread):
 
         return frame, info
 
-    @staticmethod
-    def detect_face_deepface(frame: np.ndarray) -> Tuple[np.ndarray, dict]:
-        analyze_data = DeepFace.analyze(frame, 
+
+    def detect_face_deepface(self, frame: np.ndarray) -> Tuple[np.ndarray, dict]:
+        # frame_pre = self.apply_clahe(frame)
+        # frame_pre = self.adjust_gamma(frame_pre, gamma=1.5)
+        frame_pre = frame
+
+        analyze_data = DeepFace.analyze(frame_pre, 
                                         actions = [
                                             # 'age', 
                                             'emotion'
@@ -102,20 +103,50 @@ class VideoThread(QThread):
         x, y, w, h = region["x"], region["y"], region["w"], region["h"]
         top_left = (x, y)
         bottom_right = (x + w, y + h)
-        cv2.rectangle(frame, top_left, bottom_right, color=(0, 255, 0), thickness=2)
+        cv2.rectangle(frame_pre, top_left, bottom_right, color=(0, 255, 0), thickness=2)
 
         # Draw on eyes
         for eye in ["left_eye", "right_eye"]:
             center = region[eye]
             if center != (0, 0):  # Ensure the eye was detected
-                cv2.circle(frame, center, radius=10, color=(255, 0, 0), thickness=2)
+                cv2.circle(frame_pre, center, radius=10, color=(255, 0, 0), thickness=2)
 
-        return frame, analyze_data
+        return frame_pre, analyze_data
+    
+    @staticmethod
+    def apply_clahe(frame: np.ndarray) -> np.ndarray:
+        # Convert to LAB color space
+        lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
+        l, a, b = cv2.split(lab)
+
+        # Create CLAHE object (clipLimit=2.0, tileGridSize=8×8)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        l_clahe = clahe.apply(l)
+
+        # Merge back and convert to BGR
+        lab_clahe = cv2.merge([l_clahe, a, b])
+        frame_clahe = cv2.cvtColor(lab_clahe, cv2.COLOR_LAB2BGR)
+        return frame_clahe
+    
+    @staticmethod
+    def build_gamma_lut(gamma: float) -> np.ndarray:
+        inv_gamma = 1.0 / gamma
+        lut = np.array([((i / 255.0) ** inv_gamma) * 255 for i in range(256)]).astype("uint8")
+        return lut
+
+    def adjust_gamma(self, frame: np.ndarray, gamma: float = 1.5) -> np.ndarray:
+        lut = self.build_gamma_lut(gamma)
+        return cv2.LUT(frame, lut)
 
 
 class BackstageWin(QWidget):
-    def __init__(self):
+    def __init__(self, v_debug: bool = False):
         super().__init__()
+
+        global video_debug
+        video_debug = v_debug
+        print('='*10 + f'\nmain.video_debug: {video_debug}\n'+ '='*10)
+
         self.setWindowTitle('백스테이지 console')
 
         # video widget
